@@ -4,6 +4,7 @@
 import numpy as np
 # from brokenaxes import brokenaxes
 from scipy.fftpack import fft
+from scipy.signal import stft
 import matplotlib.pyplot as plt
 # 安装 PyWavelets，要在解释器中安装，不能用 pip 命令
 import pywt
@@ -247,9 +248,10 @@ def show_am_freq(data, fs=44100, freq_range=[0., 0.], am_lim=(0., 0.)):
     norm_am, freq, phi = get_fft_result(data, fs)
     freq, cut_l_idx, cut_r_idx = get_freq_range(freq, freq_range[0], freq_range[1])
     norm_am = norm_am[cut_l_idx:cut_r_idx]
-    plt.figure("frequency domain")
+    plt.figure("frequency domain", (5, 4))
+    # plt.figure("frequency domain", (3, 4))
     plt.xlabel("Frequency(Hz)")
-    plt.ylabel("Normalized Amplitude")
+    plt.ylabel("Amplitude")
     plt.plot(freq, norm_am, c='blue')
     if am_lim != (0., 0.):
         plt.ylim(am_lim)
@@ -341,6 +343,26 @@ def show_an_signal(func, proc_range=[-25., 25.], step=0., title="analog_signal")
     plt.show()
 
 
+# 【短时傅里叶变换】
+def show_stft(data, fs=44100, wnd=256):
+    f, t, nd = stft(data, fs=fs, window='hann', nperseg=wnd, noverlap=None, nfft=None,
+                    detrend=False, return_onesided=True, boundary='zeros', padded=True, axis=-1)
+    # nperseg：每个段的长度，也就是窗口大小，默认为256(2^n)
+    # noverlap:段之间重叠的点数。默认值 noverlap = nperseg/2
+
+    plt.figure(1, (6, 4))
+    plt.pcolormesh(t, f, np.abs(nd), vmin=0, vmax=4)
+    plt.title('STFT')
+    plt.ylabel('frequency')
+    plt.xlabel('time')
+    yticks = np.arange(0, 3000, 210.52)
+    plt.yticks(yticks, np.around(np.array(yticks) * 1.9, 0))
+    plt.ylim((0, 2200))
+    plt.show()
+
+    return
+
+
 # 【查看小波变换】
 def show_wavelet(data, fs=44100, title='wavelet', color_lv=15):
     t = np.arange(0, len(data) / fs, 1 / fs)
@@ -392,9 +414,17 @@ def show_conf_mat(true_val, pred_mat, ticks=[], show_annotate=True, reverse=Fals
         # 注意，真值和预测值必须是连续的，即 [0, 1, 2, 3] 不能是 [0, 1, 3, 4]，否则会出现不对称的问题。
         # print("当前混淆矩阵：")
         # print(confusion_matrix(true_val, pred_val))
+        """
+        这里若报错：
+            operands could not be broadcast together with shapes
+            是因为相对于真值，预测值中出现未知值。
+            例如真值 [1, 2, 3]，预测值 [1, 2, 4]
+        """
+        print(true_val)
+        print(pred_val)
         cm += confusion_matrix(true_val, pred_val)
-    # 通过计算多组混淆矩阵求平均值的方式，可以看准确率，保留 2 位小数
-    cm = np.around(cm / len(pred_mat), 2)
+    # 通过计算多组混淆矩阵求平均值的方式，可以看准确率，保留 1 位小数
+    cm = np.around(cm * 100 / len(pred_mat), 1)
     if reverse:
         cm = np.flip(cm)
 
@@ -438,7 +468,7 @@ def show_conf_mat(true_val, pred_mat, ticks=[], show_annotate=True, reverse=Fals
         plt.yticks(range(0, len(true_val)), ticks, rotation=50, font="Times New Roman")
     # plt.grid()
     plt.show()
-    return
+    return accu_rate
 
 
 # 【显示散点图】

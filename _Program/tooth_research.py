@@ -284,8 +284,7 @@ def add_AC(data_1, ac_multiple=1):
     return data_1
 
 
-# 现已改称【固有频率调整算法】
-# 原【共振峰调整算法】
+# 【固有频率调整算法】
 def nature_freq_adjust(data_1, data_2, area, depth):
     """
     :param data_1:声道 1 数据
@@ -307,14 +306,14 @@ def nature_freq_adjust(data_1, data_2, area, depth):
 
     if area == Teeth.UL or area == Teeth.UR:
         # 后缀号表示声道
-        freq_center = rt.gauss_rand(1200, float_range=10)
+        freq_center = rt.gauss_rand(1150, float_range=50)
         freq_range = 300
         # 每间隔5Hz添加一个，中心区左右 200Hz 范围。
         # height 表示纵向缩放系数
-        height = 0.7 * np.log(depth + 8) / 3
+        height = 0.4 * np.log(depth + 8) / 3
         # freq 1 是高频部分
-        # freq_1 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 30), float_range=10)
-        # am_1 = rt.gauss_rand(uf.bowl(freq_1, freq_center, 2.5, 3), float_range=0.05) * height - 0.1
+        freq_1 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 5), float_range=1)
+        am_1 = rt.gauss_rand(uf.bowl(freq_1, freq_center, 2.5, 3), float_range=0.5) * height - 0.1
 
         """
         生成信号待解决问题：
@@ -328,52 +327,52 @@ def nature_freq_adjust(data_1, data_2, area, depth):
         
         """
 
-        x_1, y_1 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
-                              rt.gauss_rand(900, float_range=100), 0, rt.gauss_rand(1200, float_range=300),
-                              rt.gauss_rand(10, float_range=5), pooling=2)
-        x_2, y_2 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
-                              rt.gauss_rand(1100, float_range=100), 0, rt.gauss_rand(800, float_range=200),
-                              rt.gauss_rand(15, float_range=1), pooling=2)
-
-        freq_1 = np.append(x_1, x_2)
-        am_1 = np.append(y_1, y_2)
-        min_val = -3
-        max_val = -min_val
-        float_range = max_val
-        am_1 = rt.mixed_rand(am_1, min_val=min_val, max_val=max_val, float_range=float_range)
-
-        print("freq_1 最值：", np.min(freq_1), np.max(freq_1))
-        print("am_1 最值：", np.min(am_1), np.max(am_1))
+        # x_1, y_1 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
+        #                       rt.gauss_rand(900, float_range=100), 0, rt.gauss_rand(1200, float_range=300),
+        #                       0.0001 * rt.gauss_rand(0.1, float_range=0.05), pooling=2)
+        # x_2, y_2 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
+        #                       rt.gauss_rand(1100, float_range=100), 0, rt.gauss_rand(800, float_range=200),
+        #                       0.0001 * rt.gauss_rand(0.05, float_range=0.02), pooling=2)
+        #
+        # freq_1 = np.append(x_1, x_2)
+        # am_1 = np.append(y_1, y_2)
+        # min_val = -3
+        # max_val = -min_val
+        # float_range = max_val
+        # am_1 = rt.mixed_rand(am_1, min_val=min_val, max_val=max_val, float_range=float_range)
+        #
+        # print("freq_1 最值：", np.min(freq_1), np.max(freq_1))
+        # print("am_1 最值：", np.min(am_1), np.max(am_1))
 
         # plt.figure()
         # plt.plot(freq_1, am_1)
         # plt.show()
         # freq 2 是低频部分
-        # freq_2 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 30), float_range=10)
-        # am_2 = rt.gauss_rand(uf.bowl(freq_2, freq_center, 2.5, 3), float_range=0.05) * height - 0.1
+        freq_2 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 30), float_range=10)
+        am_2 = rt.gauss_rand(uf.bowl(freq_2, freq_center, 2.5, 3), float_range=0.05) * height - 0.1
 
-        x_1, y_1 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
-                              rt.gauss_rand(300, float_range=10), 0, rt.gauss_rand(500, float_range=100),
-                              rt.gauss_rand(20, float_range=5), pooling=5)
-        x_2, y_2 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
-                              rt.gauss_rand(300, float_range=10), 0, rt.gauss_rand(450, float_range=50),
-                              rt.gauss_rand(10, float_range=1), pooling=5)
-
-        freq_2 = np.append(x_1, x_2)
-        am_2 = np.append(y_1, y_2)
-        min_val = -2
-        max_val = -min_val
-        float_range = max_val
-        am_2 = rt.mixed_rand(am_2, min_val=min_val, max_val=max_val, float_range=float_range)
+        # x_1, y_1 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
+        #                       rt.gauss_rand(300, float_range=10), 0, rt.gauss_rand(500, float_range=100),
+        #                       0.001 * rt.gauss_rand(1, float_range=0.5), pooling=5)
+        # x_2, y_2 = uf.get_evp(dir_path + '\\' + str(rt.get_randint(0, csv_num)) + ".csv",
+        #                       rt.gauss_rand(300, float_range=10), 0, rt.gauss_rand(450, float_range=50),
+        #                       0.001 * rt.gauss_rand(0.5, float_range=0.2), pooling=5)
+        #
+        # freq_2 = np.append(x_1, x_2)
+        # am_2 = np.append(y_1, y_2)
+        # min_val = -2
+        # max_val = -min_val
+        # float_range = max_val
+        # am_2 = rt.mixed_rand(am_2, min_val=min_val, max_val=max_val, float_range=float_range)
 
     elif area == Teeth.DL or area == Teeth.DR:
         # 下颌骨固频给个 501 Hz
         # height 表示纵向缩放系数
-        height = 0.6 * np.log(depth + 8) / 3
-        freq_center = rt.gauss_rand(501, float_range=3)
+        height = 0.5 * np.log(depth + 8) / 3
+        freq_center = rt.gauss_rand(501, float_range=10)
         freq_range = 260
         freq_1 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 5), float_range=5)
-        am_1 = uf.bowl(freq_1, freq_center, 2, 5) * height - 0.1
+        am_1 = rt.gauss_rand(uf.bowl(freq_1, freq_center, 2, 5) * height - 0.1, float_range=0.1)
         # plt.figure()
         # plt.plot(freq_1, am_1)
         # plt.show()
@@ -415,36 +414,36 @@ def nature_freq_adjust(data_1, data_2, area, depth):
         data_1 = uf.add_sin(data_1, am_2[i], freq_2[i], phi_2[i])
 
     # 2月1日修改，下牙区在1200加一些频带。
-    # if area == Teeth.DL or area == Teeth.DR:
-    #     freq_center = rt.gauss_rand(1200, float_range=5)
-    #     freq_range = 200
-    #     height = 0.2 * np.log(depth + 8) / 3
-    #     # 每间隔5Hz添加一个，中心区左右 200Hz 范围。
-    #     freq_1 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 20), float_range=10)
-    #     am_1 = rt.gauss_rand(uf.bowl(freq_1, freq_center, 2.5, 3), float_range=0.5) * height - 0.03
-    #     freq_2 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 20), float_range=10)
-    #     am_2 = rt.gauss_rand(uf.bowl(freq_2, freq_center, 2.5, 3), float_range=0.5) * height - 0.03
-    #     phi_1 = rt.mean_rand([0] * len(freq_1), -np.pi, np.pi)
-    #     phi_2 = rt.mean_rand([0] * len(freq_2), -np.pi, np.pi)
-    #     for j in range(len(freq_1)):
-    #         data_1 = uf.add_sin(data_1, am_1[j], freq_1[j], phi_1[j])
-    #     for j in range(len(freq_2)):
-    #         data_2 = uf.add_sin(data_2, am_2[j], freq_2[j], phi_2[j])
-    # elif area == Teeth.UL or area == Teeth.UR:
-    #     # 在上牙区加一些低频频带
-    #     height = 0.1 * np.log(depth + 8) / 3
-    #     freq_center = rt.gauss_rand(501, float_range=3)
-    #     freq_range = 220
-    #     freq_1 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 5), float_range=5)
-    #     am_1 = uf.bowl(freq_1, freq_center, 2, 5) * height
-    #     freq_2 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 5), float_range=5)
-    #     am_2 = uf.bowl(freq_2, freq_center, 2, 5) * height
-    #     phi_1 = rt.mean_rand([0] * len(freq_1), -np.pi, np.pi)
-    #     phi_2 = rt.mean_rand([0] * len(freq_2), -np.pi, np.pi)
-    #     for j in range(len(freq_1)):
-    #         data_1 = uf.add_sin(data_1, am_1[j], freq_1[j], phi_1[j])
-    #     for j in range(len(freq_2)):
-    #         data_2 = uf.add_sin(data_2, am_2[j], freq_2[j], phi_2[j])
+    if area == Teeth.DL or area == Teeth.DR:
+        freq_center = rt.gauss_rand(1200, float_range=5)
+        freq_range = 200
+        height = 0.2 * np.log(depth + 8) / 3
+        # 每间隔5Hz添加一个，中心区左右 200Hz 范围。
+        freq_1 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 20), float_range=10)
+        am_1 = rt.gauss_rand(uf.bowl(freq_1, freq_center, 2.5, 3), float_range=0.5) * height - 0.03
+        freq_2 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 20), float_range=10)
+        am_2 = rt.gauss_rand(uf.bowl(freq_2, freq_center, 2.5, 3), float_range=0.5) * height - 0.03
+        phi_1 = rt.mean_rand([0] * len(freq_1), -np.pi, np.pi)
+        phi_2 = rt.mean_rand([0] * len(freq_2), -np.pi, np.pi)
+        for j in range(len(freq_1)):
+            data_1 = uf.add_sin(data_1, am_1[j], freq_1[j], phi_1[j])
+        for j in range(len(freq_2)):
+            data_2 = uf.add_sin(data_2, am_2[j], freq_2[j], phi_2[j])
+    elif area == Teeth.UL or area == Teeth.UR:
+        # 在上牙区加一些低频频带
+        height = 0.1 * np.log(depth + 8) / 3
+        freq_center = rt.gauss_rand(501, float_range=3)
+        freq_range = 220
+        freq_1 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 5), float_range=5)
+        am_1 = uf.bowl(freq_1, freq_center, 2, 5) * height
+        freq_2 = rt.gauss_rand(np.arange(freq_center - freq_range, freq_center + freq_range, 5), float_range=5)
+        am_2 = uf.bowl(freq_2, freq_center, 2, 5) * height
+        phi_1 = rt.mean_rand([0] * len(freq_1), -np.pi, np.pi)
+        phi_2 = rt.mean_rand([0] * len(freq_2), -np.pi, np.pi)
+        for j in range(len(freq_1)):
+            data_1 = uf.add_sin(data_1, am_1[j], freq_1[j], phi_1[j])
+        for j in range(len(freq_2)):
+            data_2 = uf.add_sin(data_2, am_2[j], freq_2[j], phi_2[j])
 
     # 【四】加入全局噪声
     # data_1 = rt.gauss_rand(data_1, float_range=1)
@@ -941,18 +940,6 @@ def show_nature_freq(path=r"D:\python生成的数据\WY-UL-8-030.wav"):
     r_mse = get_mse(freq_r, am_r, p_fun_r)
     print(r_mse - l_mse)
 
-    # idx_l = idx_max - 50
-    # idx_r = idx_max - 2
-    # freq_local = freq[idx_l:idx_r]
-    # am_local = am[idx_l:idx_r]
-    # v.show_poly_fit(freq_local, am_local, 9)
-
-    # idx_l = idx_max + 2
-    # idx_r = idx_max + 50
-    # freq_local = freq[idx_l:idx_r]
-    # am_local = am[idx_l:idx_r]
-    # v.show_poly_fit(freq_local, am_local, 9)
-
     return
 
 
@@ -1135,7 +1122,7 @@ def nature_freq_distinguish_3():
     plt.ylabel("diff")
     plt.legend()
     plt.show()
-    return
+    return mean_th
 
 
 # 【计算平滑度】

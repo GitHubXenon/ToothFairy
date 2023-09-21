@@ -5,6 +5,7 @@
 from scipy.io import wavfile
 from matplotlib import pyplot as plt
 import numpy as np
+import data_generating as dg
 
 import csv_tools as ct
 import random_tools as rt
@@ -12,12 +13,22 @@ import power as p
 import view as v
 import filter as f
 import data_split as ds
-
+import time
+import utility_functions as uf
+from scipy.optimize import curve_fit
+import os
+import re
 from tooth_research import Teeth
 import tooth_research as tr
 # from sklearn.metrics import confusion_matrix
 import threading
 import time
+
+# import cv2
+
+# 文件命名数字填充的方法 i = 20
+# print(str(i).zfill(3))
+
 
 """
 6.27 要写的算法：
@@ -89,6 +100,25 @@ class GenDataThread(threading.Thread):
         return
 
 
+def reg_test():
+    """
+        转换逻辑是：
+        原始字符串需要对特殊字符转译一遍
+        然后送入正则表达式中，再被转译一遍
+
+        那么反斜线就会被转译两次，在字符串中被转译一次
+        那么在不加 r 的字符串中，想要获得反斜线，就要写成 \\\\
+    """
+    _str = r"F:\data\WY-UL-1-000.wav"
+    _reg = r'.+?-(UL|UR|DL|DR)-[1-8]-[0-9]{3}\.[Ww][Aa][Vv]'
+    result = re.search(_reg, _str)
+    if result:
+        print('匹配到的串是：')
+        print(result.group())
+    else:
+        print('匹配失败')
+
+
 # 使用多线程优化生成数据
 def gen_data(uname, area, start_depth, stop_depth, num,
              src_path=r"C:\Users\xenon\OneDrive\_真实数据\【左上】\L4.wav",
@@ -114,6 +144,24 @@ https://www.zhihu.com/column/p/205263612
 将上下局部拼到一起，中间加个断裂带即可。
 """
 
+# 上颌骨参考数据，上颌骨 b = 2.5 次方
+# y = np.array([5000, 5300, 6000, 7900, 13000, 21000, 27000, 39000])
+# y = np.array([8800, 10100, 12000, 15000, 19000, 24000, 29900, 38000])
+y = np.array([8800, 9900, 11000, 12000, 14000, 16500, 18200, 20000])
+# 9 次多项式拟合结果
+# p_param = [0.004777367826588879, -0.08137418252750041, 0.14009549469837, 4.192386766922977, -10.709078771607329,
+#            -252.59052597206065, 2152.369510149559, -6831.2934265498625, 11284.529727545545, 1653.4379081514587]
+# p_fun = np.poly1d(p_param)
+#
+# # 执行随机采样
+# x_s = []
+# for k in range(1, 9):
+#     x_s.append([k] * 50)
+# y_s = rt.mixed_rand(p_fun(x_s))
+# v.show_plot_scatter(x_s, y_s, p_fun)
+# y = np.array([12000, 13000, 15000, 17000, 20000, 24000, 30000, 39000])
+
+
 """
 8 月 17 日晚结果：
 alpha 就应该是个正的，但不是定值。拟合出来是 0.25 左右？
@@ -132,6 +180,12 @@ x 取值一定是除以 fs 后，才是真实振幅。
 2. 随机波动曲线，给定函数和取值区间，在某个范围内较为平滑地随机波动。（初步考虑多项式拟合法，并打几个随机点）
 """
 
+
+# gen_data("WY", "DL", 1, 9, 5,
+#          src_path=r"/Users/wangyang/Library/CloudStorage/OneDrive-个人/_真实数据/【左上】/L5.wav",
+#          gen_path=r"/Volumes/UGREEN/python生成的数据")
+
+# gen_data_single()
 
 def gen_data_single(name='LZH', area=Teeth.DL, start_num=10, data_num=3, src_path=r"C:\Users\xenon\Desktop\清洁3~1.wav"):
     start_time = time.time()
@@ -163,6 +217,11 @@ def gen_data_single(name='LZH', area=Teeth.DL, start_num=10, data_num=3, src_pat
     return
 
 
+def func(lst):
+    lst[-1][0] += 1
+    return
+
+
 """
 重要结论：
 函数参数为 list 或 dict 时，对其进行改写，会修改原数据！
@@ -172,7 +231,23 @@ def gen_data_single(name='LZH', area=Teeth.DL, start_num=10, data_num=3, src_pat
 # ------------------------------
 # 主文件入口
 if __name__ == '__main__':
-    ds.cut(r"C:\Users\xenon\Desktop\数据20230621\新建文件夹\data2", "WY", 120)
+    # 214508 21-45-24
+    # 21-46-09
+    # path = r"C:\Users\xenon\Desktop\滑动\21-46-09.wav"
+
+    # dc.show_slide_power(path)
+
+    # dc.tooth32_conf_mat()
+
+    # dc.different_user_id()
+
+    # dc.freq_domain()
+
+    # dc.param_contrast()
+
+    # dc.different_data_groups_params()
+
+    pass
 
     """
     后槽牙：
@@ -181,8 +256,10 @@ if __name__ == '__main__':
     组5 2700 39000
     
     先回去确定不同人的模型
+    然后再造数据
     
-    共振是谐波峰造成的？谐波峰占主要，后面带小峰为次要
+    修改理论：
+    共振是谐波峰造成的，谐波峰占主要，后面带小峰为次要
     
     当前任务：
     找合适的原始信号用于切割。
@@ -279,7 +356,7 @@ if __name__ == '__main__':
 
 
 那么数据重新收成连续的？
-前校正问题，维特比算法。那这个ground truth就自己说了算了。
+前校正问题，维特比算法。
 按不紧的情况？
 
     
@@ -559,6 +636,52 @@ if __name__ == '__main__':
     # 生成数据单线程版示例代码
 
 
+# ------------------------------
+
+
+# 8 月 8 日备份
+def adjust():
+    fs, signal = wavfile.read(r"C:\Users\xenon\Desktop\数据20230621\新建文件夹\data1\UL1.wav")
+    # print(signal)
+    # data = signal
+    data = signal[:, 0]
+    data_ = data.copy()
+
+    start_idx = int(48 * len(data) / 100)
+    end_idx = -int(48 * len(data) / 100)
+    data = data[start_idx:end_idx]
+
+    peak_freq = uf.get_main_peak_freq(data, fs)
+
+    data = f.get_mean_pooling(data, 517 / peak_freq)
+
+    # 700Hz
+    data = f.butter_filter(data, 705, 695, n=16)
+    # 690Hz
+    data = f.butter_filter(data, 695, 685, n=16)
+    # 710Hz
+    data = f.butter_filter(data, 715, 705, n=16)
+
+    # data = f.butter_filter(data, 900, 1600, n=16)
+
+    # data, data_ = tr.nature_freq_adjust(data, data_, Teeth.DL, 1)
+    data, data_ = tr.nature_freq_adjust(data, data_, Teeth.UL, 1)
+
+    am_1 = rt.gauss_rand(2, float_range=0.5)
+    freq_1 = np.arange(50, 2000, 50)
+    phi_1 = rt.mean_rand(0, -np.pi, np.pi)
+
+    for i in range(len(freq_1)):
+        data = uf.add_sin(data, am_1 * 5 / np.exp(freq_1[i] / 50), freq_1[i], phi_1)
+
+    data_ = data.copy()
+
+    tr.signal_write(data, data_, fs, r".\freq.wav")
+
+    # v.show_stft(data)
+    v.show_am_time(data)
+    v.show_am_freq(data)
+    return
 
 
 # 计算不同窗口长度下的功率

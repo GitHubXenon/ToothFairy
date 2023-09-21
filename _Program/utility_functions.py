@@ -437,16 +437,20 @@ def get_bias_mean(val_1, val_2, bias=0.5):
 # 即 t = 1 / fs, x = x * t
 # 注意！幅频相参数只接受标量，不接受向量！
 def sin(x, am=1., freq=1., phi=0., fs=44100):
-    if freq < 0:
-        freq = -freq
     x = np.array(x, dtype=float)
     # 将 x 从采样点数，转化为时间。
     x = x / fs
     if isinstance(am, types.FunctionType):
         # 如果振幅是函数形式
-        return am(x) * np.sin(freq * 2 * np.pi * x + phi)
-    else:
-        return am * np.sin(freq * 2 * np.pi * x + phi)
+        am = am(x)
+    # else:
+    #     return am * np.sin(freq * 2 * np.pi * x + phi)
+    if isinstance(freq, types.FunctionType):
+        freq = freq(x)
+    if freq < 0:
+        print("uf.sin 出现负频率，已调整为正频率。")
+        freq = -freq
+    return am * np.sin(freq * 2 * np.pi * x + phi)
 
 
 # def sin_func(x, am_func, freq, phi, fs):
@@ -823,11 +827,6 @@ dmax = 5，n 自适应 3.55，单减（×）
     i0 = 1e5
     w=0.014
 
-    上2：
-
-
-
-
     其中 d_max 偏差较大，原因是需要用来进行拟合
     这就有的写了，因为 d 在指数位置，可以将多出来的 ed次方进行因式分解
     这个因式就表示整体的放缩程度
@@ -1010,11 +1009,12 @@ def curve_subdivision(x, y, multi=10, wnd=5):
 
 # 交换数组中的两个位置的元素
 # 可以兼容自己和自己交换
-# def exchange_elements(arr, idx_1, idx_2):
-#     tmp = arr[idx_1]
-#     arr[idx_1] = arr[idx_2]
-#     arr[idx_2] = tmp
-#     return arr
+def exchange_idx(arr, idx_1, idx_2):
+    tmp = arr[idx_1]
+    arr[idx_1] = arr[idx_2]
+    arr[idx_2] = tmp
+    return arr
+
 
 def exchange_val(v_1, v_2):
     temp = v_1
@@ -1383,7 +1383,9 @@ def get_peaks(am, idx_range=None):
     peak_idx = []
     # 峰值
     peak_val = []
+    print("正在获取峰值序列：")
     for i in range(idx_range[0], idx_range[1] - 1):
+        v.show_progress(i, idx_range[1] - 1 - idx_range[0])
         # 从一阶差分中找峰值点，i+1 就是原始数据的峰值位置
         if diff[i + 1] < 0 < diff[i]:
             j = 0
@@ -1397,6 +1399,7 @@ def get_peaks(am, idx_range=None):
                 # 如果从头找到尾都没找到，则直接添加
                 peak_val = np.append(peak_val, am[i + 1])
                 peak_idx = np.append(peak_idx, i + 1)
+    v.show_progress()
     # 将 peak_idx 转换为 int 型
     peak_idx = np.array(np.rint(peak_idx), dtype=int)
     return peak_idx, peak_val

@@ -1,4 +1,4 @@
-# 曲线拟合实验
+# 曲线拟合实验室
 import numpy as np
 import utility_functions as uf
 import view as v

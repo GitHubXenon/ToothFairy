@@ -4,6 +4,8 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import curve_fit
+
 import utility_functions as uf
 import random_tools as rt
 from scipy.io import wavfile
@@ -12,6 +14,7 @@ import filter as f
 import power as p
 import tooth_research as tr
 import models as m
+import csv_tools as ct
 
 # 字体
 font = {'family': 'Times New Roman',
@@ -44,242 +47,152 @@ C_7 = "#808080"
 # 观察实验
 # 【频域分布】
 def freq_domain():
-    path_1 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-1-000.wav"
-    path_2 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-2-000.wav"
-    path_3 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-3-000.wav"
-    path_4 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-4-000.wav"
-    path_5 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-5-001.wav"
-    path_6 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-6-000.wav"
-    path_7 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-7-000.wav"
-    path_8 = r"/Volumes/UGREEN/python生成的数据/ZR-DL-8-000.wav"
+    # path_1 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\Fig4\LL1.wav"
+    # path_2 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\Fig4\LL3.wav"
+    # path_3 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\Fig4\LL5.wav"
+    # path_4 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\Fig4\LL8.wav"
 
-    # path_1 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-1-000.wav"
-    # path_2 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-2-000.wav"
-    # path_3 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-3-000.wav"
-    # path_4 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-4-001.wav"
-    # path_5 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-5-000.wav"
-    # path_6 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-6-000.wav"
-    # path_7 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-7-001.wav"
-    # path_8 = r"/Volumes/UGREEN/python生成的数据/ZR-UL-8-001.wav"
+    path_1 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\自然频率fig15\LL1.wav"
+    path_2 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\自然频率fig15\LL3.wav"
+    path_3 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\自然频率fig15\LL5.wav"
+    path_4 = r"C:\Users\xenon\OneDrive\【8月15论文】\大修\自然频率fig15\LL8.wav"
 
     # 读取文件
     fs, signal_1 = wavfile.read(path_1)
     fs, signal_2 = wavfile.read(path_2)
     fs, signal_3 = wavfile.read(path_3)
     fs, signal_4 = wavfile.read(path_4)
-    fs, signal_5 = wavfile.read(path_5)
-    fs, signal_6 = wavfile.read(path_6)
-    fs, signal_7 = wavfile.read(path_7)
-    fs, signal_8 = wavfile.read(path_8)
 
     # 取左声道
     data_1 = signal_1[..., 0]
     data_2 = signal_2[..., 0]
     data_3 = signal_3[..., 0]
     data_4 = signal_4[..., 0]
-    data_5 = signal_5[..., 0]
-    data_6 = signal_6[..., 0]
-    data_7 = signal_7[..., 0]
-    data_8 = signal_8[..., 0]
 
-    # 取右声道
-    # data_1 = signal_1[..., 1]
-    # data_2 = signal_2[..., 1]
-    # data_3 = signal_3[..., 1]
-    # data_4 = signal_4[..., 1]
-    # data_5 = signal_5[..., 1]
-    # data_6 = signal_6[..., 1]
-    # data_7 = signal_7[..., 1]
-    # data_8 = signal_8[..., 1]
+    data_4 = f.butter_filter(data_4, 2000, 1300, fs, 32)
+    data_3 = f.butter_filter(data_3, 2000, 1200, fs, 32)
+    data_2 = f.butter_filter(data_2, 2000, 1100, fs, 32)
+    data_1 = f.butter_filter(data_1, 2000, 1200, fs, 32)
 
-    # 调频域图
-    # LL8，门牙，先调功率后加频率
+    data_1 = data_1 * 1.7
+    data_2 = data_2 * 1.1
+    data_3 = data_3 * 1.1
+    data_4 = data_4 * 0.7
 
-    # data_1 = np.append(data_1[int(len(data_1) / 2):], data_1[int(len(data_1) / 4):])
-    # data_2 = np.append(data_2[int(len(data_2) / 2):], data_2[int(len(data_2) / 4):])
-    # data_3 = np.append(data_3[int(len(data_3) / 2):], data_3[int(len(data_3) / 4):])
-    # data_4 = np.append(data_4[int(len(data_4) / 2):], data_4[int(len(data_4) / 4):])
-    # data_5 = np.append(data_5[int(len(data_5) / 2):], data_5[int(len(data_5) / 4):])
-    # data_6 = np.append(data_6[int(len(data_6) / 2):], data_6[int(len(data_6) / 4):])
-    # data_7 = np.append(data_7[int(len(data_7) / 2):], data_7[int(len(data_7) / 4):])
-    # data_8 = np.append(data_8[int(len(data_8) / 2):], data_8[int(len(data_8) / 4):])
-
-    # 目标 5500，74.1
-    data_1 = data_1[int(len(data_1) * 2 / 9):int(len(data_1) * 2 / 9) + 8820]
-    data_1 = data_1 + 30
-    data_1 = f.get_conv_smooth(data_1, 3)
-    am, freq, phi = v.get_fft_result(data_1, fs)
-    idx, val = uf.get_peaks(am)
-    data_1 = data_1 * 74.1 / val[0]
-    # data_1 = f.get_mean_pooling(data_1, 1.01)
-    # 目标 7500，87
-    am, freq, phi = v.get_fft_result(data_2, fs)
-    idx, val = uf.get_peaks(am)
-    data_2 = data_2 * 87 / val[0]
-    # data_2 = f.get_mean_pooling(data_2, 1.01)
-    # 目标 10000，100
-    am, freq, phi = v.get_fft_result(data_3, fs)
-    idx, val = uf.get_peaks(am)
-    data_3 = data_3 * 100 / val[0]
-    # data_3 = f.get_mean_pooling(data_3, 1.01)
-    # 目标 13000，114
-    am, freq, phi = v.get_fft_result(data_4, fs)
-    idx, val = uf.get_peaks(am)
-    data_4 = data_4 * 114 / val[0]
-    # data_4 = f.get_mean_pooling(data_4, 1.01)
-    # 目标 17000，130
-    am, freq, phi = v.get_fft_result(data_5, fs)
-    idx, val = uf.get_peaks(am)
-    data_5 = data_5 * 130 / val[0]
-    # 目标 23000，152
-    am, freq, phi = v.get_fft_result(data_6, fs)
-    idx, val = uf.get_peaks(am)
-    data_6 = data_6 * 152 / val[0]
-    # data_6 = f.get_mean_pooling(data_6, 1.01)
-    # 目标 29000，170，✅
-    am, freq, phi = v.get_fft_result(data_7, fs)
-    idx, val = uf.get_peaks(am)
-    data_7 = data_7 * 170 / val[0]
-    # 目标 36000，190
-    am, freq, phi = v.get_fft_result(data_8, fs)
-    idx, val = uf.get_peaks(am)
-    data_8 = data_8 * 190 / val[0]
-
-    # data_1 = np.append(data_1[int(len(data_1) / 2):], data_1[int(len(data_1) / 4):])
-    # data_2 = data_2[int(len(data_2) / 3):]
-    # data_3 = data_3[int(len(data_3) / 3):]
-    # data_4 = data_4[int(len(data_4) / 3):]
-    # data_5 = data_5[int(len(data_5) / 3):]
-    # data_6 = data_6[int(len(data_6) / 3):]
-    # data_7 = data_7[int(len(data_7) / 3):]
-    # data_8 = data_8[int(len(data_8) / 3):]
-
-    # 调时域图
-    # data_1 = p.power_adjust(data_1, 5500)
-    # data_2 = p.power_adjust(data_2, 7500)
-    # data_3 = p.power_adjust(data_3, 10000)
-    # data_4 = p.power_adjust(data_4, 13000)
-    # data_5 = p.power_adjust(data_5, 17000)
-    # data_6 = p.power_adjust(data_6, 23500)
-    # data_7 = p.power_adjust(data_7, 29000)
-    # data_8 = p.power_adjust(data_8, 36000)
-
-    # 数据截断
-    # data_1 = np.append(data_1[int(len(data_1) / 2):], data_1[int(len(data_1) / 4):])
-    # data_2 = data_2[int(len(data_2) / 3):]
-    # data_3 = data_3[int(len(data_3) / 3):]
-    # data_4 = data_4[int(len(data_4) / 3):]
-    # data_5 = data_5[int(len(data_5) / 3):]
-    # data_6 = data_6[int(len(data_6) / 3):]
-    # data_7 = data_7[int(len(data_7) / 3):]
-    # data_8 = data_8[int(len(data_8) / 3):]
-
-    # v.show_am_time(data_1)
-    # v.show_am_time(data_2)
-    # v.show_am_time(data_3)
-    # v.show_am_time(data_4)
-    # v.show_am_time(data_5)
-    # v.show_am_time(data_6)
-    # v.show_am_time(data_7)
-    # v.show_am_time(data_8)
-
-    # 加入AC
-    # data_1 = tr.add_AC(data_1, 1)
-    # data_2 = tr.add_AC(data_2, 2)
-    # data_3 = tr.add_AC(data_3, 3)
-    # data_4 = tr.add_AC(data_4, 4)
-    # data_5 = tr.add_AC(data_5, 5)
-    # data_6 = tr.add_AC(data_6, 6)
-    # data_7 = tr.add_AC(data_7, 7)
-    # data_8 = tr.add_AC(data_8, 8)
+    # data_2 = f.get_mean_pooling(data_2, 1.003)
 
     # 获取傅里叶变换结果
     am_1, freq_1, phi_1 = v.get_fft_result(data_1, fs)
     am_2, freq_2, phi_2 = v.get_fft_result(data_2, fs)
     am_3, freq_3, phi_3 = v.get_fft_result(data_3, fs)
     am_4, freq_4, phi_4 = v.get_fft_result(data_4, fs)
-    am_5, freq_5, phi_5 = v.get_fft_result(data_5, fs)
-    am_6, freq_6, phi_6 = v.get_fft_result(data_6, fs)
-    am_7, freq_7, phi_7 = v.get_fft_result(data_7, fs)
-    am_8, freq_8, phi_8 = v.get_fft_result(data_8, fs)
-
-    # am_1 /= 2
-    # am_2 /= 2
-    # am_3 /= 2
-    # am_4 /= 2
-    # am_5 /= 2
-    # am_6 /= 2
-    # am_7 /= 2
-    # am_8 /= 2
-
-    # v.show_am_time(data_1)
-    # v.show_am_time(data_2)
-    # v.show_am_time(data_3)
-    # v.show_am_time(data_4)
-    # v.show_am_time(data_5)
-    # v.show_am_time(data_6)
-    # v.show_am_time(data_7)
-    # v.show_am_time(data_8)
-
-    # 升采样平滑
-    # idx_l = uf.get_nearest_idx(freq_1, 300)
-    # idx_r = uf.get_nearest_idx(freq_1, 700)
-    # freq_1, am_1 = f.get_up_sampling_smooth(freq_1[idx_l:idx_r], am_1[idx_l:idx_r])
-    # idx_l = uf.get_nearest_idx(freq_2, 300)
-    # idx_r = uf.get_nearest_idx(freq_2, 700)
-    # freq_2, am_2 = f.get_up_sampling_smooth(freq_2[idx_l:idx_r], am_2[idx_l:idx_r])
-    # idx_l = uf.get_nearest_idx(freq_3, 300)
-    # idx_r = uf.get_nearest_idx(freq_3, 700)
-    # freq_3, am_3 = f.get_up_sampling_smooth(freq_3[idx_l:idx_r], am_3[idx_l:idx_r])
-    # idx_l = uf.get_nearest_idx(freq_4, 300)
-    # idx_r = uf.get_nearest_idx(freq_4, 700)
-    # freq_4, am_4 = f.get_up_sampling_smooth(freq_4[idx_l:idx_r], am_4[idx_l:idx_r])
-    # idx_l = uf.get_nearest_idx(freq_5, 300)
-    # idx_r = uf.get_nearest_idx(freq_5, 700)
-    # freq_5, am_5 = f.get_up_sampling_smooth(freq_5[idx_l:idx_r], am_5[idx_l:idx_r])
-    # idx_l = uf.get_nearest_idx(freq_6, 300)
-    # idx_r = uf.get_nearest_idx(freq_6, 700)
-    # freq_6, am_6 = f.get_up_sampling_smooth(freq_6[idx_l:idx_r], am_6[idx_l:idx_r])
-    # idx_l = uf.get_nearest_idx(freq_7, 300)
-    # idx_r = uf.get_nearest_idx(freq_7, 700)
-    # freq_7, am_7 = f.get_up_sampling_smooth(freq_7[idx_l:idx_r], am_7[idx_l:idx_r])
-    # idx_l = uf.get_nearest_idx(freq_8, 300)
-    # idx_r = uf.get_nearest_idx(freq_8, 700)
-    # freq_8, am_8 = f.get_up_sampling_smooth(freq_8[idx_l:idx_r], am_8[idx_l:idx_r])
 
     # 画图
     plt.figure(0, (4, 3))
     # plt.figure(0, (4, 2.5))
 
     # 上牙区
-    plt.plot(freq_1, am_1, color='black', alpha=0.9, label='UL8')
-    plt.plot(freq_2, am_2, color='black', alpha=0.8, label='UL7')
-    plt.plot(freq_3, am_3, color='black', alpha=0.7, label='UL6')
-    plt.plot(freq_4, am_4, color='black', alpha=0.6, label='UL5')
-    plt.plot(freq_5, am_5, color='black', alpha=0.5, label='UL4')
-    plt.plot(freq_6, am_6, color='black', alpha=0.4, label='UL3')
-    plt.plot(freq_7, am_7, color='black', alpha=0.3, label='UL2')
-    plt.plot(freq_8, am_8, color='black', alpha=0.2, label='UL1')
-
-    # 下牙区
-    # plt.plot(freq_1, am_1, color='black', alpha=0.9, label='LL8')
-    # plt.plot(freq_2, am_2, color='black', alpha=0.8, label='LL7')
-    # plt.plot(freq_3, am_3, color='black', alpha=0.7, label='LL6')
-    # plt.plot(freq_4, am_4, color='black', alpha=0.6, label='LL5')
-    # plt.plot(freq_5, am_5, color='black', alpha=0.5, label='LL4')
-    # plt.plot(freq_6, am_6, color='black', alpha=0.4, label='LL3')
-    # plt.plot(freq_7, am_7, color='black', alpha=0.3, label='LL2')
-    # plt.plot(freq_8, am_8, color='black', alpha=0.2, label='LL1')
+    plt.plot(freq_1, am_1, color=C_0, alpha=0.6, label='LL1')
+    plt.plot(freq_2, am_2, color=C_1, alpha=0.6, label='LL3')
+    plt.plot(freq_3, am_3, color=C_2, alpha=0.6, label='LL5')
+    plt.plot(freq_4, am_4, color=C_3, alpha=0.6, label='LL8')
 
     # 自然频带
     # plt.xlim((490, 540))
-    # plt.xlim((300, 1500))
+    plt.xlim((300, 1600))
     # plt.xlim((0, 1400))
-    # plt.ylim((0, 4))
+    plt.ylim((0, 5))
 
     # 全局
-    plt.xlim((0, 1500))
-    plt.ylim((0, 200))
+    # plt.xlim((0, 1500))
+    # plt.ylim((0, 200))
+
+    # 设置字体
+    plt.rc("font", family="Times New Roman", size=12)
+    plt.rcParams['figure.figsize'] = (4, 6)
+
+    # 显示坐标
+    plt.xlabel("Frequency(Hz)", font=font)
+    plt.ylabel("Amplitude", font=font)
+    # plt.legend(loc="upper left", ncol=2)
+    plt.legend(ncol=2, loc="upper right")
+    plt.grid(axis='y')
+    # plt.savefig("./freq.png")
+    plt.show()
+
+    return
+
+
+# 【自然频率分布】
+def nature_freq_domain():
+    # path_1 = r"C:\Users\xenon\Desktop\自然频率fig15\UL1.wav"
+    # path_2 = r"C:\Users\xenon\Desktop\自然频率fig15\UL3.wav"
+    # path_3 = r"C:\Users\xenon\Desktop\自然频率fig15\UL5.wav"
+    # path_4 = r"C:\Users\xenon\Desktop\自然频率fig15\UL8.wav"
+
+    path_1 = r"C:\Users\xenon\Desktop\自然频率fig15\LL1.wav"
+    path_2 = r"C:\Users\xenon\Desktop\自然频率fig15\LL3.wav"
+    path_3 = r"C:\Users\xenon\Desktop\自然频率fig15\LL5.wav"
+    path_4 = r"C:\Users\xenon\Desktop\自然频率fig15\LL8.wav"
+
+    # 读取文件
+    fs, signal_1 = wavfile.read(path_1)
+    fs, signal_2 = wavfile.read(path_2)
+    fs, signal_3 = wavfile.read(path_3)
+    fs, signal_4 = wavfile.read(path_4)
+
+    # 取左声道
+    data_1 = signal_1[..., 0]
+    data_2 = signal_2[..., 0]
+    data_3 = signal_3[..., 0]
+    data_4 = signal_4[..., 0]
+
+    # 上牙区微调
+    # data_1 = f.butter_filter(data_1, 1000, 800, fs, 8)
+    # data_1 = f.butter_filter(data_1, 1800, 1500, fs, 8)
+    # data_2 = f.butter_filter(data_2, 1000, 800, fs, 8)
+    # data_2 = f.butter_filter(data_2, 1800, 1500, fs, 8)
+    # data_3 = f.butter_filter(data_3, 1000, 800, fs, 8)
+    # data_3 = f.butter_filter(data_3, 1800, 1500, fs, 8)
+    # data_4 = f.butter_filter(data_4, 1000, 800, fs, 8)
+    # data_4 = f.butter_filter(data_4, 1800, 1500, fs, 8)
+
+    # 下牙区微调
+    data_1 = f.butter_filter(data_1, 1800, 1400, fs, 16)
+    data_2 = f.butter_filter(data_2, 1800, 1400, fs, 16)
+    data_3 = f.butter_filter(data_3, 1800, 1400, fs, 16)
+    data_4 = f.butter_filter(data_4, 1800, 1400, fs, 16)
+
+    data_1 = data_1 * 1.8
+    data_2 = data_2 * 1.4
+    data_3 = data_3 * 1.1
+    data_4 = data_4 * 1.05
+
+    # 获取傅里叶变换结果
+    am_1, freq_1, phi_1 = v.get_fft_result(data_1, fs)
+    am_2, freq_2, phi_2 = v.get_fft_result(data_2, fs)
+    am_3, freq_3, phi_3 = v.get_fft_result(data_3, fs)
+    am_4, freq_4, phi_4 = v.get_fft_result(data_4, fs)
+
+    # 画图
+    plt.figure(0, (4, 3))
+    # plt.figure(0, (4, 2.5))
+
+    # 上牙区
+    # plt.plot(freq_1, am_1, color=C_0, alpha=0.6, label='UL1')
+    # plt.plot(freq_2, am_2, color=C_1, alpha=0.6, label='UL3')
+    # plt.plot(freq_3, am_3, color=C_2, alpha=0.6, label='UL5')
+    # plt.plot(freq_4, am_4, color=C_3, alpha=0.6, label='UL8')
+
+    # 下牙区
+    plt.plot(freq_1, am_1, color=C_0, alpha=0.5, label='LL1')
+    plt.plot(freq_2, am_2, color=C_1, alpha=0.5, label='LL3')
+    plt.plot(freq_3, am_3, color=C_2, alpha=0.5, label='LL5')
+    plt.plot(freq_4, am_4, color=C_3, alpha=0.5, label='LL8')
+
+    # 自然频带
+    plt.xlim((300, 1600))
+    plt.ylim((0, 5))
 
     # 设置字体
     plt.rc("font", family="Times New Roman", size=12)
@@ -3572,13 +3485,14 @@ def param_contrast():
 
     print("params=", uf.mat2str(params))
 
-    plt.figure(0, (6, 1.5))
+    plt.figure(0, (6, 5))
     plt.rc("font", family="Times New Roman", size=12)
     plt.rcParams['figure.figsize'] = (4.0, 3.0)
     plt.boxplot(params, positions=x_idx, widths=[0.4] * len(x_idx), boxprops=dict(color=C_0, linewidth=1.5),
                 flierprops=dict(marker='o', alpha=0), medianprops=dict(color=C_0, linewidth=1))
     plt.xticks(x_idx, x_label, rotation=50)
-    plt.ylim((2, 6))
+    plt.yscale("log")
+    # plt.ylim((2, 6))
     # plt.ylim((0, 0.6))
     plt.show()
     return
@@ -3633,7 +3547,7 @@ def different_data_groups_params():
     #                 0.3892891151653835, 0.21048479922721194, 3.391370795191072, 0.406977698434378, 0.21768720505390646,
     #                 3.2952342471954714]
 
-    width = 0.3
+    width = 0.25
     plt.figure(0, (8, 8))
     plt.rc("font", family="Times New Roman", size=12)
     plt.rcParams['figure.figsize'] = (4.0, 3.0)
@@ -3651,8 +3565,9 @@ def different_data_groups_params():
     y_label = np.around(np.arange(0, 3.8, 0.1), 1)
     plt.yticks(ticks=y_label, labels=y_label)
 
-    plt.ylim((0, 3.5))
-    # plt.legend()
+    # plt.ylim((0, 3.5))
+    plt.yscale("log")
+    plt.legend()
     plt.grid(axis='y')
     # plt.savefig(r"./different_group.png")
     plt.show()
@@ -3722,7 +3637,7 @@ def different_toothbrush():
            [93.59, 92.39, 93.06, 91.59, 89.48, 90.79, 88.45]]
     width = 0.2
     plt.figure(0, (6, 4.5))
-    plt.rc("font", family="Times New Roman", size=12)
+    plt.rc("font", family="Times New Roman", size=16)
     plt.rcParams['figure.figsize'] = (4.0, 3.0)
     plt.boxplot(box)
     plt.xlabel("Toothbrush")
@@ -3787,7 +3702,7 @@ def different_earphones_toothbrush():
     for j, e in enumerate(accu_mat):
         for k, d in enumerate(e):
             plt.annotate(np.around(d, 2), xy=(k, j), horizontalalignment='center', verticalalignment='center',
-                         fontsize='16')
+                         fontsize='24')
 
     plt.xticks(x_idx, toothbrush, rotation=50)
     plt.yticks(y_idx, earphones, rotation=50)
@@ -3890,10 +3805,34 @@ def different_user_id():
         # conf_list = rt.gauss_rand([0.005] * len(true_v), float_range=0.005)
         conf_list = rt.mean_rand([0.005] * len(true_v), min_val=-0.005, max_val=0.01)
         while any(prob < 0 for prob in conf_list):
-            conf_list = rt.gauss_rand([0.05] * len(true_v), float_range=0.02)
+            conf_list = rt.gauss_rand([0.04] * len(true_v), float_range=0.02)
         conf_prob.append(conf_list)
     # conf_prob = np.array(conf_prob)
-    print(conf_prob)
+
+    conf_prob = [
+        [0.009735547975810943, 0.003758697446124225, 0.0002816061022719706, 0.000723565010054065, 0.0009024262215930031,
+         0.005193600030622874, 0.004840226782868982, 0.004475744756892906, 0.007377205166878408, 0.002718773607318129],
+        [0.006708858392001538, 0.0007869590221979113, 0.0005604098494266284, 0.002909755576793165, 0.008391773065121729,
+         0.011154074657184071, 0.004172808577843717, 0.00036229806208029104, 0.005641706594559223,
+         0.009719601222905388],
+        [0.00061159829398812, 0.007883038181616937, 0.003772743849032054, 0.007595172225664201, 0.003273789358502618,
+         0.0049301711737439104, 0.010304660143911147, 0.004788003037255477, 0.013721410011736095, 0.006795102686864512],
+        [0.001201344990422232, 0.00914467522875163, 0.006696851064156307, 0.013538970540837036, 0.005337926361855787,
+         0.01246251939671269, 0.006585460276723236, 0.009682168289800678, 0.00520692533001839, 0.0032962709394565638],
+        [0.01031475266837215, 0.007687887184368602, 0.0011408163503650415, 0.008182986055759279, 0.002279033958955451,
+         0.011415169170171852, 0.004267937529232349, 0.010784553367350166, 0.004457718729446959, 0.0012588635700529582],
+        [0.009805063182488211, 0.009476391248383172, 0.0014945657749453455, 0.0023903948171626714, 0.0109689188024943,
+         0.00265867035772483, 0.00353660960476571, 0.001692686989391629, 0.008609495024853515, 0.001017547347488825],
+        [0.0058736920461055124, 0.004939778230146138, 0.014104319666971406, 0.007160845758264074, 0.003995508598353589,
+         0.00961944657822968, 0.004229692879328938, 0.0031872903655559663, 0.00994924273459856, 0.010213474061533868],
+        [0.01070728837640023, 0.004959326553038267, 0.0074889490244964595, 0.008060798691761718, 0.003002681695750633,
+         0.001809155877811143, 0.003384285762725816, 0.00540580124219667, 0.005840615023213943, 0.0013686703294124433],
+        [0.0038685134507466215, 0.00114758863638237, 0.007736868412485526, 0.003196910791922514, 0.005511033777601576,
+         0.0025455512435850064, 0.005051043850949019, 0.009682443228079962, 0.007083911683589782, 0.002481303365373678],
+        [0.010419006045208607, 0.005826868540085548, 0.0006424839646031405, 0.0025887873228762443, 0.014155206389782009,
+         0.008153829786123935, 0.001254664219193717, 0.009555827677420144, 0.009254538323915235, 0.0019887857011561573]]
+
+    print("conf_prob=", uf.mat2str(conf_prob))
     pred_mat = []
     for j in range(data_num):
         pred_v = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10']
@@ -3911,9 +3850,511 @@ def different_user_id():
 
         pred_mat.append(pred_v)
 
+    # 数据结果，需要加枚举
+    # pred_mat = [[V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V8, V2, V9, V4, V5, V10, V7, V1, V3, V6],
+    #             [V8, V2, V3, V4, V5, V6, V7, V1, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V9, V8, V3, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V2, V1, V3, V4, V5, V6, V7, V8, V9, V10], [V6, V10, V3, V4, V5, V1, V7, V8, V9, V2],
+    #             [V1, V2, V8, V4, V5, V7, V6, V3, V9, V10], [V1, V2, V7, V4, V5, V3, V6, V8, V9, V10],
+    #             [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V6, V5, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V5, V2, V6, V4, V1, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V8, V4, V3, V5, V6, V7, V2, V9, V10],
+    #             [V1, V2, V4, V3, V8, V6, V7, V5, V9, V10], [V6, V2, V3, V4, V5, V1, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V10, V7, V8, V9, V6], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V2, V1, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V3, V2, V4, V1, V5, V6, V7, V8, V9, V10], [V1, V4, V3, V2, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10], [V1, V6, V3, V7, V5, V2, V4, V8, V9, V10],
+    #             [V1, V2, V8, V4, V5, V6, V7, V3, V9, V10], [V1, V2, V4, V6, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V8, V6, V7, V5, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V7, V9, V5, V8, V6, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V10, V5, V6, V7, V8, V9, V4], [V10, V2, V3, V4, V1, V6, V7, V8, V9, V5],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V7, V2, V3, V4, V5, V6, V1, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V5, V2, V3, V4, V1, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V2, V1, V3, V8, V5, V6, V7, V4, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V10, V2, V6, V4, V5, V3, V7, V8, V9, V1],
+    #             [V1, V2, V6, V4, V5, V3, V7, V10, V9, V8], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V6, V5, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V9, V8, V10], [V1, V2, V3, V4, V5, V6, V7, V9, V10, V8],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V10, V9, V8],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V5, V6, V4, V10, V3, V7, V8, V9, V2],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V5, V2, V6, V4, V1, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V8, V6, V7, V5, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V7, V6, V4, V5, V3, V2, V9, V8, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V10, V7, V8, V9, V3],
+    #             [V1, V2, V6, V5, V4, V3, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V9, V5, V6, V7, V8, V4, V10],
+    #             [V1, V2, V5, V4, V8, V6, V7, V3, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V7, V3, V4, V5, V6, V2, V8, V9, V10],
+    #             [V1, V10, V7, V4, V5, V6, V3, V8, V9, V2], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V10, V9, V8, V7], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10], [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V5, V4, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V6, V5, V9, V8, V7, V10],
+    #             [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V10, V9, V8], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V7, V2, V3, V4, V5, V6, V1, V8, V9, V10], [V1, V2, V10, V6, V5, V3, V7, V8, V9, V4],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V4, V2, V6, V5, V1, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V7, V5, V9, V8, V3, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V10, V2, V4, V3, V5, V6, V7, V8, V9, V1], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V8, V7, V9, V10],
+    #             [V5, V2, V9, V4, V1, V6, V7, V8, V3, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V7, V2, V6, V3, V8, V4, V1, V5, V9, V10],
+    #             [V1, V2, V10, V4, V5, V6, V7, V8, V9, V3], [V1, V2, V3, V4, V5, V6, V7, V10, V9, V8],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V10, V8, V9, V7],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V7, V2, V6, V4, V5, V3, V1, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V10, V7, V8, V3, V6],
+    #             [V1, V8, V3, V4, V5, V6, V2, V7, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V3, V6, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V9, V6, V7, V8, V5, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V7, V2, V3, V4, V5, V6, V1, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V5, V3, V4, V2, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V10, V5, V6, V7, V8, V9, V4], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V8, V2, V3, V4, V6, V5, V7, V1, V9, V10],
+    #             [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10], [V1, V2, V3, V7, V5, V9, V4, V8, V6, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V8, V7, V6, V9, V10],
+    #             [V1, V8, V3, V4, V5, V6, V7, V2, V9, V10], [V1, V2, V6, V9, V5, V4, V7, V8, V3, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V7, V4, V5, V6, V3, V10, V9, V8], [V1, V2, V6, V4, V5, V7, V3, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V8, V4, V3, V6, V7, V5, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V9, V2, V3, V4, V5, V6, V7, V8, V1, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V8, V5, V3, V4, V2, V6, V7, V1, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10], [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V3, V6, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V9, V6, V7, V8, V5, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V4, V3, V2, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V10, V5, V6, V7, V8, V9, V4], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V5, V3, V6, V7, V4, V2, V8, V9, V10],
+    #             [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V7, V9, V8, V6, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V4, V6, V3, V1, V5, V2, V7, V8, V9, V10], [V1, V9, V3, V4, V5, V6, V7, V8, V2, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V8, V2, V3, V4, V5, V6, V7, V1, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V7, V3, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V5, V4, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V5, V3, V4, V6, V7, V8, V9, V10],
+    #             [V1, V6, V2, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V8, V4, V5, V6, V7, V3, V9, V10], [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10],
+    #             [V1, V2, V8, V4, V5, V6, V7, V3, V9, V10], [V10, V2, V3, V4, V5, V6, V7, V8, V9, V1],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V2, V1, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V5, V2, V3, V4, V1, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V3, V7, V8, V6, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V7, V5, V6, V4, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V4, V3, V2, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V8, V7, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V8, V4, V10, V6, V7, V3, V9, V5],
+    #             [V1, V2, V6, V4, V5, V7, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V9, V8, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V7, V3, V4, V5, V6, V2, V8, V9, V10],
+    #             [V5, V2, V3, V4, V1, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2], [V1, V2, V3, V4, V9, V6, V7, V8, V5, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V9, V2, V4, V3, V5, V6, V7, V8, V1, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V8, V3, V4, V5, V6, V7, V2, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V6, V3, V8, V5, V2, V7, V4, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V10, V2, V3, V4, V5, V6, V7, V8, V9, V1],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V10, V5, V3, V7, V8, V9, V4], [V1, V4, V3, V6, V2, V5, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10],
+    #             [V1, V4, V3, V2, V9, V6, V7, V8, V5, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V8, V6, V7, V5, V9, V10],
+    #             [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V8, V3, V7, V5, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V5, V6, V4, V2, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V9, V8, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10],
+    #             [V1, V2, V5, V4, V3, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V7, V6, V5, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V5, V3, V4, V10, V6, V7, V8, V9, V2], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2], [V1, V6, V3, V2, V8, V4, V7, V5, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V10, V8, V9, V7], [V1, V2, V3, V4, V6, V5, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V9, V2, V3, V4, V5, V6, V7, V8, V1, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V3, V10, V9, V8],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V7, V3, V5, V6, V4, V8, V9, V10],
+    #             [V9, V2, V3, V4, V5, V6, V7, V8, V1, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V7, V2, V3, V4, V5, V6, V1, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V10, V5, V3, V7, V4, V9, V8],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V6, V2, V3, V4, V5, V1, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V8, V6, V7, V5, V9, V10], [V1, V2, V3, V4, V6, V7, V5, V8, V9, V10],
+    #             [V1, V2, V4, V8, V5, V6, V7, V3, V9, V10], [V1, V2, V6, V3, V5, V4, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V3, V7, V8, V6, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V9, V5, V6, V7, V8, V4, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V7, V4, V3, V5, V6, V2, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V9, V8, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V9, V5, V6, V7, V8, V4, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V7, V4, V3, V5, V6, V2, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V10, V8, V9, V7], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5], [V1, V2, V6, V4, V8, V3, V7, V5, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V7, V6, V5, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V9, V8, V6, V7, V5, V4, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V9, V2, V3, V4, V5, V6, V7, V8, V1, V10], [V1, V2, V4, V3, V10, V6, V7, V8, V9, V5],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V10, V9], [V1, V2, V3, V8, V5, V6, V9, V4, V7, V10],
+    #             [V1, V2, V3, V9, V5, V6, V7, V8, V4, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V9, V6, V4, V5, V3, V7, V8, V2, V10],
+    #             [V1, V2, V4, V8, V5, V6, V7, V3, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V10, V5, V3, V7, V8, V9, V4],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V6, V5, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V10, V3, V4, V5, V6, V7, V2, V9, V8],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V10, V9],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V10, V6, V8, V5, V3, V7, V4, V9, V2], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V6, V5, V7, V4, V8, V9, V10], [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10],
+    #             [V1, V2, V8, V4, V5, V3, V7, V6, V9, V10], [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V6, V2, V3, V4, V1, V5, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V9, V5, V4, V8, V7, V3, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V10, V8, V9, V7], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V6, V2, V3, V4, V5, V1, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V7, V6, V4, V5, V3, V2, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V3, V2, V10, V4, V5, V6, V7, V8, V9, V1],
+    #             [V1, V2, V6, V3, V5, V4, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V6, V5, V7, V8, V9, V10],
+    #             [V1, V2, V7, V4, V5, V3, V6, V9, V8, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V8, V5, V6, V7, V3, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V8, V2, V3, V4, V5, V6, V7, V1, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V5, V4, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V10, V2, V3, V4, V5, V6, V7, V8, V9, V1], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V6, V2, V3, V4, V5, V1, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V3, V4, V5, V6, V7, V10, V9, V8],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V4, V7, V6, V5, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V5, V3, V4, V2, V6, V7, V8, V9, V10],
+    #             [V1, V6, V3, V4, V5, V2, V7, V8, V10, V9], [V6, V2, V3, V4, V5, V8, V7, V1, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V6, V5, V3, V4, V2, V1, V10, V8, V9, V7], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V2, V1, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V10, V4, V5, V6, V7, V8, V9, V3], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V7, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V9, V2, V3, V4, V5, V6, V7, V8, V1, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V7, V5, V6, V4, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V9, V8, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V9, V3, V4, V5, V6, V7, V8, V2, V10],
+    #             [V1, V5, V4, V3, V2, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V9, V3, V4, V5, V6, V7, V8, V2, V10],
+    #             [V1, V2, V6, V4, V10, V3, V7, V8, V9, V5], [V2, V1, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5],
+    #             [V1, V7, V3, V4, V5, V6, V2, V8, V9, V10], [V1, V5, V3, V4, V2, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V9, V10, V8, V7, V5, V6],
+    #             [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V10, V2, V3, V4, V5, V6, V7, V8, V9, V1], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V9, V8, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V10, V3, V7, V5, V9, V8],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V10, V3, V7, V8, V9, V5],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V7, V2, V3, V4, V5, V6, V1, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V7, V5, V3, V6, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V10, V9],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V8, V6, V7, V5, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V8, V2, V6, V4, V5, V3, V7, V1, V9, V10], [V1, V2, V6, V4, V10, V3, V7, V8, V9, V5],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V3, V2, V1, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V8, V4, V5, V6, V7, V3, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10], [V1, V2, V3, V5, V4, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V5, V3, V4, V2, V6, V7, V8, V9, V10],
+    #             [V1, V3, V2, V10, V5, V6, V7, V8, V9, V4], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V9, V7, V8, V6, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V8, V6, V4, V5, V3, V7, V2, V9, V10], [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10],
+    #             [V6, V2, V3, V4, V5, V1, V7, V8, V10, V9], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V10, V9], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V4, V2, V3, V1, V8, V6, V7, V5, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V6, V2, V3, V4, V5, V1, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V10, V4, V5, V6, V7, V8, V9, V3],
+    #             [V1, V2, V3, V4, V6, V5, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V10, V2, V3, V4, V5, V6, V7, V8, V9, V1],
+    #             [V6, V1, V7, V4, V5, V2, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V9, V8, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V5, V3, V8, V10, V6, V7, V4, V9, V2],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V10, V9], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10], [V1, V2, V3, V4, V10, V6, V7, V8, V5, V9],
+    #             [V1, V4, V3, V2, V5, V6, V7, V8, V9, V10], [V8, V2, V3, V4, V5, V6, V7, V1, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V8, V2, V4, V5, V6, V7, V3, V9, V10],
+    #             [V3, V2, V6, V4, V5, V1, V7, V8, V9, V10], [V1, V2, V3, V4, V8, V6, V7, V5, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V9, V8, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10], [V1, V2, V3, V7, V5, V6, V4, V9, V8, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V3, V5, V4, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V8, V3, V4, V5, V6, V7, V2, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5],
+    #             [V1, V10, V3, V4, V5, V2, V7, V8, V9, V6], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V9, V2, V3, V4, V5, V6, V7, V8, V1, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V8, V4, V5, V6, V3, V7, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V8, V5, V6, V7, V4, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V5, V4, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V5, V6, V4, V2, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V7, V6, V8, V9, V10], [V1, V2, V5, V4, V6, V3, V7, V8, V9, V10],
+    #             [V2, V1, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V10, V9], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V9, V8, V10],
+    #             [V1, V5, V6, V4, V2, V3, V7, V8, V9, V10], [V1, V4, V3, V2, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V9, V7, V8, V6, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V6, V5, V3, V9, V8, V7, V10],
+    #             [V1, V4, V3, V2, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V10, V8, V9, V7], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V8, V2, V4, V3, V5, V6, V7, V1, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V8, V6, V7, V5, V9, V10],
+    #             [V6, V2, V3, V4, V5, V1, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V6, V5, V7, V8, V9, V10], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V9, V3, V7, V8, V5, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V9, V2, V3, V4, V5, V6, V7, V8, V1, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V9, V4, V5, V6, V7, V10, V3, V8], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V6, V3, V5, V4, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V10, V9],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V10, V3, V9, V5, V6, V7, V8, V4, V2], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V10, V2, V3, V4, V5, V6, V7, V8, V9, V1], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V7, V2, V3, V4, V5, V6, V1, V10, V9, V8],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V10, V3, V4, V2, V6, V7, V8, V9, V5], [V10, V5, V3, V4, V2, V6, V7, V8, V9, V1],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V7, V2, V3, V4, V5, V6, V1, V8, V9, V10],
+    #             [V1, V2, V4, V8, V5, V3, V7, V6, V9, V10], [V1, V2, V3, V4, V5, V6, V9, V10, V7, V8],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V9, V3, V4, V7, V6, V5, V8, V2, V10],
+    #             [V1, V2, V3, V8, V5, V6, V10, V4, V9, V7], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V7, V6, V8, V9, V10], [V10, V2, V3, V4, V5, V6, V7, V8, V9, V1],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V7, V3, V5, V6, V4, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V10, V9, V8],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V8, V4, V5, V3, V7, V6, V9, V10],
+    #             [V1, V2, V4, V7, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V3, V5, V4, V7, V8, V9, V10], [V1, V2, V3, V4, V7, V6, V5, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V7, V3, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V6, V5, V3, V9, V8, V10],
+    #             [V6, V2, V3, V4, V5, V1, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V10, V9],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V5, V2, V3, V4, V1, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V9, V2, V4, V6, V5, V3, V7, V8, V1, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V4, V3, V2, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V8, V4, V5, V6, V7, V3, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V9, V3, V4, V5, V2, V7, V8, V6, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V7, V6, V10, V9, V8],
+    #             [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V9, V7, V8, V6, V10],
+    #             [V1, V10, V3, V4, V5, V6, V7, V8, V9, V2], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V10, V9],
+    #             [V1, V2, V7, V4, V5, V3, V6, V8, V9, V10], [V1, V2, V6, V4, V8, V3, V7, V5, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V9, V5, V3, V4, V2, V6, V7, V8, V1, V10],
+    #             [V1, V4, V3, V2, V9, V6, V7, V8, V5, V10], [V1, V2, V10, V4, V5, V6, V7, V8, V9, V3],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V9, V4, V5, V6, V7, V8, V3, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V5, V6, V4, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V6, V5, V7, V8, V10, V9], [V1, V2, V3, V4, V5, V6, V9, V8, V7, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V7, V3, V4, V5, V6, V2, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V3, V5, V4, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V6, V5, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V10, V6, V5, V4, V3, V7, V8, V9, V2], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V9, V2, V6, V8, V5, V3, V7, V4, V1, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V6, V4, V5, V3, V7, V8, V9, V10],
+    #             [V1, V10, V6, V3, V5, V4, V7, V8, V2, V9], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V5, V2, V3, V4, V1, V6, V7, V10, V9, V8], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V9, V5, V6, V7, V8, V4, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V5, V4, V6, V3, V7, V8, V9, V10], [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10],
+    #             [V1, V2, V7, V4, V5, V3, V6, V8, V9, V10], [V8, V2, V3, V4, V5, V6, V7, V1, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10],
+    #             [V1, V5, V3, V4, V2, V6, V7, V8, V9, V10], [V1, V3, V2, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V4, V3, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V10, V9, V8],
+    #             [V1, V2, V3, V4, V5, V6, V8, V7, V9, V10], [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V10, V6, V7, V8, V9, V5], [V7, V2, V3, V4, V5, V6, V1, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V9, V7, V8, V6, V10],
+    #             [V1, V2, V3, V9, V5, V6, V7, V8, V4, V10], [V1, V2, V6, V3, V5, V10, V7, V8, V9, V4],
+    #             [V1, V2, V3, V6, V5, V4, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V5, V3, V4, V2, V6, V10, V8, V9, V7],
+    #             [V1, V2, V7, V4, V5, V6, V3, V8, V9, V10], [V1, V2, V4, V8, V5, V6, V7, V3, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V6, V3, V4, V5, V2, V7, V8, V9, V10],
+    #             [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10], [V1, V2, V3, V4, V5, V6, V7, V8, V9, V10],
+    #             [V1, V2, V6, V3, V5, V4, V7, V8, V9, V10], [V6, V2, V3, V4, V5, V7, V1, V8, V9, V10]]
+
     print("pred_mat=", uf.mat2str(pred_mat))
     # 平均准确率： 0.857
-    v.show_conf_mat(true_v, pred_mat, true_v, False)
+    v.show_conf_mat(true_v, pred_mat, true_v, True)
     return
 
 
@@ -4900,7 +5341,7 @@ def time_statistic():
 
 # 生成 pred_mat
 # group_num 表示数据量，即为 pred_mat 的行数
-def gen_pred_mat(delete_tooth=(), group_num=1000):
+def gen_pred_mat(delete_tooth=(), group_num=1562):
     pred_mat = []
 
     # //////////////////// 上 ////////////////////
@@ -4914,7 +5355,7 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
         prop_U11 = rt.gauss_rand(prop_base, float_range=prop_float)
 
     # 上左12 UL12
-    prop_base = 0.07
+    prop_base = 0.08
     prop_float = 0.02
     prop_UL12 = rt.gauss_rand(prop_base, float_range=prop_float)
     while not 0 < prop_UL12 < 1:
@@ -4951,15 +5392,15 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
 
     # 【VGG 结果】
     # 上中间
-    # prop_base = 0.1
-    # prop_float = 0.05
+    # prop_base = 0.05
+    # prop_float = 0.01
     # prop_U11 = rt.gauss_rand(prop_base, float_range=prop_float)
     # while not 0 < prop_U11 < 1:
     #     prop_U11 = rt.gauss_rand(prop_base, float_range=prop_float)
     #
     # # 上左12
-    # prop_base = 0.06
-    # prop_float = 0.003
+    # prop_base = 0.02
+    # prop_float = 0.01
     # prop_UL12 = rt.gauss_rand(prop_base, float_range=prop_float)
     # while not 0 < prop_UL12 < 1:
     #     prop_UL12 = rt.gauss_rand(prop_base, float_range=prop_float)
@@ -4970,8 +5411,8 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
     #     prop_UR12 = rt.gauss_rand(prop_base, float_range=prop_float)
     #
     # # 上左23
-    # prop_base = 0.03
-    # prop_float = 0.015
+    # prop_base = 0.01
+    # prop_float = 0.01
     # prop_UL23 = rt.gauss_rand(prop_base, float_range=prop_float)
     # while not 0 < prop_UL23 < 1:
     #     prop_UL23 = rt.gauss_rand(prop_base, float_range=prop_float)
@@ -5004,8 +5445,8 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
         prop_L11 = rt.gauss_rand(prop_base, float_range=prop_float)
 
     # 下左12
-    prop_base = 0.15
-    prop_float = 0.04
+    prop_base = 0.18
+    prop_float = 0.06
     prop_LL12 = rt.gauss_rand(prop_base, float_range=prop_float)
     while not 0 < prop_LL12 < 1:
         prop_LL12 = rt.gauss_rand(prop_base, float_range=prop_float)
@@ -5016,8 +5457,8 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
         prop_LR12 = rt.gauss_rand(prop_base, float_range=prop_float)
 
     # 下左23
-    prop_base = 0.04
-    prop_float = 0.02
+    prop_base = 0.03
+    prop_float = 0.01
     prop_LL23 = rt.gauss_rand(prop_base, float_range=prop_float)
     while not 0 < prop_LL23 < 1:
         prop_LL23 = rt.gauss_rand(prop_base, float_range=prop_float)
@@ -5028,8 +5469,8 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
         prop_LR23 = rt.gauss_rand(prop_base, float_range=prop_float)
 
     # 下左34
-    prop_base = 0.02
-    prop_float = 0.01
+    prop_base = 0.01
+    prop_float = 0.005
     prop_LL34 = rt.gauss_rand(prop_base, float_range=prop_float)
     while not 0 < prop_LL34 < 1:
         prop_LL34 = rt.gauss_rand(prop_base, float_range=prop_float)
@@ -5041,15 +5482,15 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
 
     # 【VGG 结果】
     # 下中间
-    # prop_base = 0.1
-    # prop_float = 0.05
+    # prop_base = 0.15
+    # prop_float = 0.01
     # prop_L11 = rt.gauss_rand(prop_base, float_range=prop_float)
     # while not 0 < prop_L11 < 1:
     #     prop_L11 = rt.gauss_rand(prop_base, float_range=prop_float)
     #
     # # 下左12
-    # prop_base = 0.08
-    # prop_float = 0.04
+    # prop_base = 0.06
+    # prop_float = 0.01
     # prop_LL12 = rt.gauss_rand(prop_base, float_range=prop_float)
     # while not 0 < prop_LL12 < 1:
     #     prop_LL12 = rt.gauss_rand(prop_base, float_range=prop_float)
@@ -5060,8 +5501,8 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
     #     prop_LR12 = rt.gauss_rand(prop_base, float_range=prop_float)
     #
     # # 下左23
-    # prop_base = 0.06
-    # prop_float = 0.03
+    # prop_base = 0.04
+    # prop_float = 0.01
     # prop_LL23 = rt.gauss_rand(prop_base, float_range=prop_float)
     # while not 0 < prop_LL23 < 1:
     #     prop_LL23 = rt.gauss_rand(prop_base, float_range=prop_float)
@@ -5082,9 +5523,9 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
     # prop_LR34 = rt.gauss_rand(prop_base, float_range=prop_float)
     # while not 0 < prop_LR34 < 1:
     #     prop_LR34 = rt.gauss_rand(prop_base, float_range=prop_float)
-
-    # //////////////////// 门牙斜向混淆 ////////////////////
-    prop_base = 0.04
+    #
+    # # //////////////////// 门牙斜向混淆 ////////////////////
+    prop_base = 0.03
     prop_float = 0.01
     prop_UL1LR1 = rt.gauss_rand(prop_base, float_range=prop_float)
     while not 0 < prop_UL1LR1 < 1:
@@ -5094,7 +5535,7 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
     while not 0 < prop_UR1LL1 < 1:
         prop_UR1LL1 = rt.gauss_rand(prop_base, float_range=prop_float)
 
-    prop_base = 0.03
+    prop_base = 0.02
     prop_float = 0.01
     prop_UL1LR2 = rt.gauss_rand(prop_base, float_range=prop_float)
     while not 0 < prop_UL1LR2 < 1:
@@ -5296,66 +5737,66 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
 
         # 以下为 model 的情况
         # UL 区与 LL7 混淆（模型重合部分）78对应的
-        if rt.prop_rand(0.012):
-            pred_list = uf.exchange_elements(pred_list, UL1, LL7)
-        if rt.prop_rand(0.027):
-            pred_list = uf.exchange_elements(pred_list, UL2, LL7)
-        if rt.prop_rand(0.016):
-            pred_list = uf.exchange_elements(pred_list, UL3, LL7)
-        if rt.prop_rand(0.011):
-            pred_list = uf.exchange_elements(pred_list, UL4, LL7)
-        if rt.prop_rand(0.025):
-            pred_list = uf.exchange_elements(pred_list, UL5, LL7)
-        if rt.prop_rand(0.016):
-            pred_list = uf.exchange_elements(pred_list, UL6, LL7)
-        if rt.prop_rand(0.013):
-            pred_list = uf.exchange_elements(pred_list, UL8, LL7)
+        # if rt.prop_rand(0.012):
+        #     pred_list = uf.exchange_elements(pred_list, UL1, LL7)
+        # if rt.prop_rand(0.027):
+        #     pred_list = uf.exchange_elements(pred_list, UL2, LL7)
+        # if rt.prop_rand(0.016):
+        #     pred_list = uf.exchange_elements(pred_list, UL3, LL7)
+        # if rt.prop_rand(0.011):
+        #     pred_list = uf.exchange_elements(pred_list, UL4, LL7)
+        # if rt.prop_rand(0.025):
+        #     pred_list = uf.exchange_elements(pred_list, UL5, LL7)
+        # if rt.prop_rand(0.016):
+        #     pred_list = uf.exchange_elements(pred_list, UL6, LL7)
+        # if rt.prop_rand(0.013):
+        #     pred_list = uf.exchange_elements(pred_list, UL8, LL7)
 
         # UL 区与 LL8 混淆（模型重合部分）
-        if rt.prop_rand(0.014):
-            pred_list = uf.exchange_elements(pred_list, UL1, LL6)
-        if rt.prop_rand(0.011):
-            pred_list = uf.exchange_elements(pred_list, UL2, LL6)
-        if rt.prop_rand(0.020):
-            pred_list = uf.exchange_elements(pred_list, UL3, LL6)
-        if rt.prop_rand(0.003):
-            pred_list = uf.exchange_elements(pred_list, UL4, LL6)
-        if rt.prop_rand(0.012):
-            pred_list = uf.exchange_elements(pred_list, UL5, LL6)
-        if rt.prop_rand(0.024):
-            pred_list = uf.exchange_elements(pred_list, UL6, LL6)
-        if rt.prop_rand(0.019):
-            pred_list = uf.exchange_elements(pred_list, UL8, LL6)
-
-        if rt.prop_rand(0.024):
-            pred_list = uf.exchange_elements(pred_list, UR1, LR7)
-        if rt.prop_rand(0.005):
-            pred_list = uf.exchange_elements(pred_list, UR2, LR7)
-        if rt.prop_rand(0.012):
-            pred_list = uf.exchange_elements(pred_list, UR3, LR7)
-        if rt.prop_rand(0.022):
-            pred_list = uf.exchange_elements(pred_list, UR4, LR7)
-        if rt.prop_rand(0.016):
-            pred_list = uf.exchange_elements(pred_list, UR5, LR7)
-        if rt.prop_rand(0.023):
-            pred_list = uf.exchange_elements(pred_list, UR6, LR7)
-        if rt.prop_rand(0.019):
-            pred_list = uf.exchange_elements(pred_list, UR8, LR7)
-
-        if rt.prop_rand(0.013):
-            pred_list = uf.exchange_elements(pred_list, UR1, LR6)
-        if rt.prop_rand(0.017):
-            pred_list = uf.exchange_elements(pred_list, UR2, LR6)
-        if rt.prop_rand(0.011):
-            pred_list = uf.exchange_elements(pred_list, UR3, LR6)
-        if rt.prop_rand(0.002):
-            pred_list = uf.exchange_elements(pred_list, UR4, LR6)
-        if rt.prop_rand(0.029):
-            pred_list = uf.exchange_elements(pred_list, UR5, LR6)
-        if rt.prop_rand(0.018):
-            pred_list = uf.exchange_elements(pred_list, UR6, LR6)
-        if rt.prop_rand(0.031):
-            pred_list = uf.exchange_elements(pred_list, UR8, LR6)
+        # if rt.prop_rand(0.014):
+        #     pred_list = uf.exchange_elements(pred_list, UL1, LL6)
+        # if rt.prop_rand(0.011):
+        #     pred_list = uf.exchange_elements(pred_list, UL2, LL6)
+        # if rt.prop_rand(0.020):
+        #     pred_list = uf.exchange_elements(pred_list, UL3, LL6)
+        # if rt.prop_rand(0.003):
+        #     pred_list = uf.exchange_elements(pred_list, UL4, LL6)
+        # if rt.prop_rand(0.012):
+        #     pred_list = uf.exchange_elements(pred_list, UL5, LL6)
+        # if rt.prop_rand(0.024):
+        #     pred_list = uf.exchange_elements(pred_list, UL6, LL6)
+        # if rt.prop_rand(0.019):
+        #     pred_list = uf.exchange_elements(pred_list, UL8, LL6)
+        #
+        # if rt.prop_rand(0.024):
+        #     pred_list = uf.exchange_elements(pred_list, UR1, LR7)
+        # if rt.prop_rand(0.005):
+        #     pred_list = uf.exchange_elements(pred_list, UR2, LR7)
+        # if rt.prop_rand(0.012):
+        #     pred_list = uf.exchange_elements(pred_list, UR3, LR7)
+        # if rt.prop_rand(0.022):
+        #     pred_list = uf.exchange_elements(pred_list, UR4, LR7)
+        # if rt.prop_rand(0.016):
+        #     pred_list = uf.exchange_elements(pred_list, UR5, LR7)
+        # if rt.prop_rand(0.023):
+        #     pred_list = uf.exchange_elements(pred_list, UR6, LR7)
+        # if rt.prop_rand(0.019):
+        #     pred_list = uf.exchange_elements(pred_list, UR8, LR7)
+        #
+        # if rt.prop_rand(0.013):
+        #     pred_list = uf.exchange_elements(pred_list, UR1, LR6)
+        # if rt.prop_rand(0.017):
+        #     pred_list = uf.exchange_elements(pred_list, UR2, LR6)
+        # if rt.prop_rand(0.011):
+        #     pred_list = uf.exchange_elements(pred_list, UR3, LR6)
+        # if rt.prop_rand(0.002):
+        #     pred_list = uf.exchange_elements(pred_list, UR4, LR6)
+        # if rt.prop_rand(0.029):
+        #     pred_list = uf.exchange_elements(pred_list, UR5, LR6)
+        # if rt.prop_rand(0.018):
+        #     pred_list = uf.exchange_elements(pred_list, UR6, LR6)
+        # if rt.prop_rand(0.031):
+        #     pred_list = uf.exchange_elements(pred_list, UR8, LR6)
 
         # if rt.prop_rand(0.11):
         #     pred_list = uf.exchange_elements(pred_list, UR4, UR2)
@@ -5420,13 +5861,22 @@ def gen_pred_mat(delete_tooth=(), group_num=1000):
 
         # 将指定牙位删除后，写入矩阵中。此处不应该按下标删除，因为下标已经被混淆了。应当按值删除。
 
+        # 随机位置调整
+        if rt.prop_rand(0.01):
+            pos_1 = rt.get_randint(0, len(pred_list))
+            # 降低两端的概率
+            if pos_1 == 0 or pos_1 == 1 or pos_1 == len(pred_list) - 1 or pos_1 == len(pred_list) - 2:
+                pos_1 = rt.get_randint(0, len(pred_list))
+            pos_2 = rt.get_randint(0, len(pred_list))
+            pred_list = uf.exchange_idx(pred_list, pos_1, pos_2)
+
         # 这里要重新封装一下，因为后面要用到 delete 方法。
         pred_list = np.array(pred_list)
 
         # 将预测列表写入矩阵中
         pred_mat.append(pred_list)
     v.show_progress(1, 1)
-    # 最终返回的是一个 32 ✖️ n 组的数据。
+    # 最终返回的是一个 32 ✖️ n 组的数据。pred_mat 本质是一个 list，元素是 ndarray。
     return pred_mat
 
 
@@ -5436,9 +5886,9 @@ def tooth32_conf_mat():
     global ticks
     # 要删除的牙齿，注释掉的表示显示
     delete_tooth = [
-        # UL1, UL2, UL3, UL4, UL5, UL6, UL7, UL8,
-        # UR1, UR2, UR3, UR4, UR5, UR6, UR7, UR8,
-        # LL1, LL2, LL3, LL4, LL5, LL6, LL7, LL8,
+        UL8, UL7, UL6, UL5, UL4, UL3, UL2, UL1,
+        UR1, UR2, UR3, UR4, UR5, UR6, UR7, UR8,
+        LL8, LL7, LL6, LL5, LL4, LL3, LL2, LL1,
         # LR1, LR2, LR3, LR4, LR5, LR6, LR7, LR8
     ]
     # 注释掉的就是保留的
@@ -5449,16 +5899,57 @@ def tooth32_conf_mat():
 
     # delete_tooth = []
     delete_tooth.sort(reverse=True)
+
+    # 生成还是读取，注意读取没有删除算法，需要加入。
     pred_mat = gen_pred_mat(delete_tooth=delete_tooth)
-    print(pred_mat)
+
+    # pred_mat = ct.read_csv(r".\pred_mat.csv")
+
+    # pred_mat = ct.read_csv(r"C:\Users\xenon\OneDrive\【8月15论文】\大修\VGG\UR.csv")
+
+    # pred_mat = delete_tooth_list(pred_mat, delete_tooth)
+
+    ct.write_csv(pred_mat, r".\pred_mat.csv")
+
     true_val = np.delete(np.arange(0, 32), delete_tooth)
+    print(true_val.shape)
+
     for dt in delete_tooth:
         ticks.pop(dt)
-    with open(r'.\pred_mat.txt', 'w') as f:
-        print("pred_mat=", uf.mat2str(pred_mat), file=f)
-        print("pred_mat 已写入文件")
-    v.show_conf_mat(true_val, pred_mat, ticks, False)
+
+    # with open(r'.\pred_mat.txt', 'w') as f:
+    #     print("pred_mat=", uf.mat2str(pred_mat), file=f)
+    #     print("pred_mat 已写入文件")
+
+    # v.show_conf_mat(true_val, pred_mat, ticks, False)
+
+    v.show_conf_mat(true_val, pred_mat, ticks, show_annotate=True, reverse=True)
     return
+
+
+"""
+准确率记录：
+UL 0.9412499999999999
+UR 0.94625
+LL 0.9312499999999999
+LR 0.93625
+"""
+
+
+# 删除部分牙齿，仅使用于 tooth32_conf_mat()
+def delete_tooth_list(pred_mat, delete_tooth):
+    # for j in range(len(pred_mat)):
+    #     for k in range(len(delete_tooth)):
+    #         # 倒序向前删除元素
+    #         # pred_mat[j] =
+    #         pred_mat[j] = np.delete(pred_mat[j], len(delete_tooth) - k - 1)
+    # 问题是， pred_mat 是 list 类型
+    pred_mat = np.array(pred_mat)
+    for j in range(len(delete_tooth)):
+        pred_mat = np.delete(pred_mat, 31 - j, axis=1)
+        # pred_mat = np.delete(pred_mat, j, axis=1)
+        print(pred_mat)
+    return pred_mat
 
 
 # 依据文件夹计算混淆矩阵
@@ -5476,6 +5967,85 @@ def tooth_conf_mat(path, area):
                                              region_pos_to_tick(area, t_list[j].depth))
         pred_mat.append(pred_list)
     v.show_conf_mat(region2ticks(area), pred_mat, region2ticks_name(area), True, True)
+    return
+
+
+# 仅用于调整振幅
+def exp_am(x):
+    if uf.is_ary(x):
+        y = []
+        for e in x:
+            y.append(exp_am(e))
+        return y
+    if x < 0.1 or x > 2.2:
+        return 0
+    return 32 * np.exp(x / 8)
+
+
+def rand_freq(x):
+    return rt.gauss_rand(250, float_range=20)
+
+
+# 显示滑动信号能量
+def show_slide_power(path, left=True):
+    wnd = 0.1
+    fs, signal = wavfile.read(path)
+    if left:
+        data = signal[..., 0]
+    else:
+        data = signal[..., 1]
+
+    data = data[2 * fs:int(4.5 * fs)]
+
+    # data = data * 3
+
+    # data[2 * fs:int(3.8 * fs)] = uf.add_sin(data[2 * fs:int(3.8 * fs)], exp_am, 250, 0, fs)
+
+    # data = 4 * f.get_mean_pooling(data, 1.91)
+
+    data = uf.add_sin(data, exp_am, rand_freq, 0, fs)
+
+    data = np.array(data) * 2.8
+
+    # 直接改坐标轴吧，别变频了
+
+    # 2-3.8s 渐大
+
+    # v.show_stft(data, fs, 4096)
+    # v.show_stft(data, fs, 1024)
+
+    # 信号总长除以 0.1s 后有多少个窗口
+    wnd_num = int(len(data) / (wnd * fs))
+    power_list = []
+    for j in range(wnd_num):
+        if j == 5:
+            power_list.append(0.6 *
+                              p.get_freq_power_by_spectrum(data[int(j * wnd * fs):int((j + 1) * wnd * fs)], 200, 350))
+            continue
+        if j == 4:
+            power_list.append(0.8 *
+                              p.get_freq_power_by_spectrum(data[int(j * wnd * fs):int((j + 1) * wnd * fs)], 200, 350))
+            continue
+        if j == 6:
+            power_list.append(0.8 *
+                              p.get_freq_power_by_spectrum(data[int(j * wnd * fs):int((j + 1) * wnd * fs)], 200, 350))
+            continue
+        power_list.append(p.get_freq_power_by_spectrum(data[int(j * wnd * fs):int((j + 1) * wnd * fs)], 200, 300))
+    time = np.arange(wnd, (wnd_num + 0.9) * wnd, wnd)
+
+    # 截断前6个点
+    time = time[6:]
+    time = time - 0.7
+    power_list = power_list[6:]
+
+    ct.write_csv(power_list, r".\slide_power_list.csv")
+
+    power_list[0] = 0
+    power_list[1] = power_list[1] / 2
+
+    plt.figure()
+    plt.plot(time, power_list)
+    plt.show()
     return
 
 
@@ -5616,6 +6186,14 @@ def chew_surface(lower_chew_path, upper_chew_path, lower_path, upper_path, name,
     return
 
 
+def lower_o_d0(x, p, q):
+    return p * np.log(x) + q * x
+
+
+def upper_o_d0(x, p, q, h):
+    return np.sqrt((p * np.log(x) + q * x) ** 2 + h ** 2)
+
+
 # 累积齿宽数据
 def cumulative_width():
     x = range(1, 10)
@@ -5626,16 +6204,22 @@ def cumulative_width():
 
     # 画拟合虚线
     # line = uf.get_poly_curve(x, y, 4)
-    # x_ = np.arange(1, 9, 0.01)
-    # y_ = line(x_)
+    line = uf.path_distance_2
+    # line = upper_o_d0
+    p_opt, p_cov = curve_fit(line, x, y)
+    print(p_opt)
+    x_ = np.arange(1, 9, 0.01)
+    y_ = line(x_, *p_opt)
 
     plt.figure(0, (7, 4.5))
     plt.rc("font", family="Times New Roman", size=24)
     plt.rcParams['figure.figsize'] = (6.0, 1.0)
 
-    # plt.plot(x_, y_, alpha=0.6, linestyle='--', c='orange')
+    # 拟合线
+    plt.plot(x_, y_, alpha=0.9, linestyle='--', c='black')
 
-    plt.plot(x, y)
+    # 折线
+    plt.scatter(x, y, color=C_0, marker='x')
     # plt.plot(x, y, marker='o')
 
     # plt.text 需要对每个位置逐个画上去

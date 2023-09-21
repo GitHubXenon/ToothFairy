@@ -10,17 +10,17 @@ from matplotlib import pyplot as plt
 
 # 参数为待处理数据，低截止、高截止、采样率、阶数、是否画图。低截止 <= 0 表示低通，高截止 <= 0 表示高通。
 
+# 【非法倍数阈值】若滤波后，数据出现超过原始数据的该倍数，则认为没有滤波成功。
 
-invalid_th = 10 ** 2  # 【非法倍数阈值】若滤波后，数据出现超过原始数据的该倍数，则认为没有滤波成功。
+
+invalid_th = 10 ** 2
 
 
+# 【非法数据判断】
+# data_ 表示处理后的数据
+# data 表示原始数据
+# return False 表示不合法，return True 表示合法
 def data_invalid(data_, data):
-    """
-    【非法数据判断】
-    data_ 表示处理后的数据
-    data 表示原始数据
-    return False 表示不合法，return True 表示合法
-    """
     if np.isnan(data_).any():
         return False
     for i in range(0, len(data)):
@@ -30,13 +30,11 @@ def data_invalid(data_, data):
         return True
 
 
+# 【巴特沃斯滤波器】
+# low_cut <= 0 表示低通滤波，此时 high_cut 的值表示截止频率
+# high_cut <= 0 表示高通滤波，此时 low_cut 的值表示截止频率
+# low_cut > high_cut 表示带阻滤波，此时两个参数分别为两边的截止频率
 def butter_filter(data, low_cut, high_cut, fs=44100, n=-1, draw=False):
-    """
-    【巴特沃斯滤波器】
-    low_cut <= 0 表示低通滤波，此时 high_cut 的值表示截止频率
-    high_cut <= 0 表示高通滤波，此时 low_cut 的值表示截止频率
-    low_cut > high_cut 表示带阻滤波，此时两个参数分别为两边的截止频率
-    """
     # 滤波器的阶数不能超过带宽，也就是说可以阶数可以自适应。
     data = np.array(data)
     # 滤波器只能接收整型数据
@@ -57,6 +55,9 @@ def butter_filter(data, low_cut, high_cut, fs=44100, n=-1, draw=False):
         while not data_invalid(data_, data):
             # 模拟滤波器仅用于画图
             b, a = signal.butter(n, high_cut, 'low', analog=True)
+            if np.isnan(a).any() or np.isinf(a).any():
+                n -= 1
+                continue
             w, h = signal.freqs(b, a)
             # 默认是数字滤波器，Wn 介于 [0, 1] 之间。即归一化的截止频率。
             b, a = signal.butter(n, high_cut_, 'low')
@@ -73,6 +74,9 @@ def butter_filter(data, low_cut, high_cut, fs=44100, n=-1, draw=False):
         # 高通滤波
         while not data_invalid(data_, data):
             b, a = signal.butter(n, low_cut, 'high', analog=True)
+            if np.isnan(a).any() or np.isinf(a).any():
+                n -= 1
+                continue
             w, h = signal.freqs(b, a)
             b, a = signal.butter(n, low_cut_, 'high')
             # 这一行会报错 ValueError: The length of `a` must be at least 2.
@@ -89,6 +93,11 @@ def butter_filter(data, low_cut, high_cut, fs=44100, n=-1, draw=False):
         # 带阻滤波
         while not data_invalid(data_, data):
             b, a = signal.butter(n, [high_cut, low_cut], 'stop', analog=True)
+            if np.isnan(a).any() or np.isinf(a).any():
+                n -= 1
+                continue
+            print(b)
+            print(a)
             w, h = signal.freqs(b, a)
             b, a = signal.butter(n, [high_cut_, low_cut_], 'stop')
             if n == 0:
@@ -125,11 +134,15 @@ def butter_filter(data, low_cut, high_cut, fs=44100, n=-1, draw=False):
     return data_
 
 
+# 获取最值池化(最值降采样)
+def get_max_pling(data, wnd=1):
+    print('功能尚待开发')
+    return
+
+
+# 【获取平滑卷积】通过滑动窗口，获得每一段窗口的均值，返回一个均值数组
+# wnd 表示窗口大小，默认 wnd = 1，表示直接返回原始数据
 def get_conv_smooth(data, wnd=1):
-    """
-    【获取平滑卷积】通过滑动窗口，获得每一段窗口的均值，返回一个均值数组
-    wnd 表示窗口大小，默认 wnd = 1，表示直接返回原始数据
-    """
     if wnd <= 0:
         print("窗口值错误！已设置窗口值为 1")
         wnd = 1
@@ -145,13 +158,10 @@ def get_conv_smooth(data, wnd=1):
     return data_mean
 
 
+# 【获取信号的平滑率】值介于 [0, 1] 之间，越接近 1 越平滑。
+# data 为一维时域信号
+# 返回值分别为平滑度和极值点坐标集合
 def get_smooth_deg(data):
-    """
-    【获取信号的平滑率】
-    返回值介于 [0, 1] 之间，越接近 1 越平滑。
-    data 为一维时域信号
-    返回值分别为平滑度和极值点坐标集合
-    """
     if len(data) <= 3:
         print("输入数据太短，无法计算平滑度.")
         return 0, np.array([])
@@ -167,12 +177,9 @@ def get_smooth_deg(data):
     return smooth_deg, extrem_idx
 
 
+# 【升采样平滑】
+# sub_dg 表示升采样程度
 def get_up_sampling_smooth(x, y, sub_dg=100):
-    """
-    【升采样平滑】
-    sub_dg 表示升采样程度，越大表示升采样点数越多。
-    由于升采样导致点数变化，因此 x y 均要输入。
-    """
     if not uf.is_ary(x) or not uf.is_ary(y):
         print("get_up_sampling_smooth 错误！x，y 必须为数组！")
         return [], []
@@ -195,13 +202,11 @@ def get_up_sampling_smooth(x, y, sub_dg=100):
     return x_, y_
 
 
+# 【获取一定平滑度下的所有极值点索引】
+# data 表示原始数据
+# smooth_th 表示平滑门限值，当平滑度大于该值后迭代结束。
+# wnd 表示初始窗口大小
 def get_end_idx(data, smooth_th=0.99, wnd=2):
-    """
-    【获取一定平滑度下的所有极值点索引】
-    data 表示原始数据
-    smooth_th 表示平滑门限值，当平滑度大于该值后迭代结束。
-    wnd 表示初始窗口大小
-    """
     data = np.array(data, dtype=float)
     mean_extrem_idx = np.array([], dtype=int)
     end_idx = np.array([0], dtype=int)
@@ -319,12 +324,10 @@ def dwt_filter(data, low_cut, high_cut, fs=44100):
 """
 
 
+# 【均值池化滤波器】
+# 支持窗口为小数值，wnd 默认是 1，等同于不进行滤波。
+# 变频功能：窗口大小即为变频倍数。例如 5Hz 变为 6Hz，则 wnd=1.2
 def get_mean_pooling(data, wnd=1.):
-    """
-    【均值池化滤波器】
-    支持窗口为小数值，wnd 默认是 1，等同于不进行滤波。
-    变频功能：窗口大小即为变频倍数。例如 5Hz 变为 6Hz，则 wnd=1.2
-    """
     if not uf.is_ary(data):
         print("get_mean_pooling 错误！请输入数组参数！")
         return data
@@ -386,8 +389,7 @@ def get_mean_pooling(data, wnd=1.):
 有两种情况，滤波器需要降阶：
 1. 滤波后数据出现 NaN
 2. 滤波后数据出现大于一个数量级（100 倍）
-
+'''
 # 参考网址：
 # https://blog.csdn.net/aaalswaaa1/article/details/120750826
 # https://www.cnpython.com/qa/1205339
-'''

@@ -1,6 +1,5 @@
 """
 本程序文件用于实现数据分割
-将一次收集到的长信号分割成多个
 """
 import os
 import random_tools as rt

@@ -19,7 +19,7 @@ def get_power(data):
 # low_cut <= 0 表示低通功率，此时 high_cut 的值表示截止频率
 # high_cut <= 0 表示高通功率，此时 low_cut 的值表示截止频率
 # low_cut > high_cut 表示带阻功率，此时两个参数分别为两边的截止频率
-def get_freq_power(data, low_cut=-1, high_cut=-1, fs=44100):
+def get_freq_power_by_filter(data, low_cut=-1, high_cut=-1, fs=44100):
     # 先带通滤波，再计算功率
     data = np.array(data, dtype=float)
     if low_cut <= 0 and high_cut <= 0 or low_cut == high_cut:

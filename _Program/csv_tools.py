@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-
-# 该模块用于读写 CSV 文件
-
+import utility_functions as uf
 
 """
 pandas 的基础数据类型是 DataFrame，简称 df
@@ -32,18 +30,20 @@ def read_csv(path):
 
 # 将 csv 文件写入
 def write_csv(data, path, col_names=()):
+    # 注意：data_ = data 还是继承原来的引用，要用 copy() 函数来复制值
+    data_ = data.copy()
     # 对每一列数据加列名
-    if len(col_names) != len(data):
+    if len(col_names) != len(data_):
         # 若列名未指定，就从 0 开始编号
-        col_names = np.arange(0, len(data))
-    for i in range(len(data)):
-        data[i] = np.insert(data[i], 0, col_names[i])
-    data = np.array(data).T
+        col_names = np.arange(0, len(data_))
+    for i in range(len(data_)):
+        data_[i] = np.insert(data_[i], 0, col_names[i])
+    data_ = np.array(data_).T
     # 这里需要转置一下，因为 csv 存储以列为广义表
 
     # 使用 tofile 的方法会写入为一维数组（自动执行 flatten 操作）
     # data.T.tofile(path, sep=',', format='%f')
-    np.savetxt(path, data, delimiter=',', fmt='%f')
+    np.savetxt(path, data_, delimiter=',', fmt='%f')
     return
 
 
